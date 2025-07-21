@@ -1,0 +1,44 @@
+name: workflow-two
+on:
+  workflow_dispatch:
+    inputs:
+      content:
+        type: string
+        description: The string to write to WORKFLOW_TWO.TXT.
+        required: false
+
+  workflow_run:
+    workflows: [main]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  # See https://github.com/orgs/community/discussions/21090#discussioncomment-3226271
+  get_workflow_run_conclusion:
+    runs-on: ubuntu-24.04
+    outputs:
+      conclusion: ${{ fromJson(steps.get_workflow_run.outputs.data).conclusion }}
+    steps:
+      - name: Get workflow run data
+        uses: octokit/request-action@7e93b91076fad3920c29d44eb2a6311d929db3dd # v2.1.0
+        id: get_workflow_run
+        with:
+          route: GET /repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  write-content:
+    runs-on: ubuntu-24.04
+    needs: get_workflow_run_conclusion
+    if: ${{ needs.get_workflow_run_conclusion.outputs.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write content
+        run: |-
+          WF_INPUT_CONTENT="${{ github.event.inputs.tasks || '' }}"
+          echo "${WF_INPUT_CONTENT:-$RANDOM}" > WORKFLOW_TWO.TXT
+          git add WORKFLOW_TWO.TXT
+          git commit -m "Updated WORKFLOW_TWO.TXT"
+          git push
