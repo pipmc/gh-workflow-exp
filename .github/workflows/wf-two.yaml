@@ -30,7 +30,6 @@ jobs:
 
   write-content:
     runs-on: ubuntu-24.04
-    needs: get_workflow_run_conclusion
     if: ${{ needs.get_workflow_run_conclusion.outputs.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Checkout
