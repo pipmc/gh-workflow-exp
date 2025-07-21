@@ -39,7 +39,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          user_id="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@users.noreply.github.com"
 
